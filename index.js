@@ -7,6 +7,7 @@ const projectRoute = require("./routes/projectRoute");
 const inviteRoute = require("./routes/invitationRoute");
 const mongoose = require("mongoose");
 const path = require("path");
+const cors = require("cors"); // Import the cors middleware
 require("./auth");
 
 mongoose.set("strictQuery", false);
@@ -24,12 +25,14 @@ mongoose.connect(process.env.MONGO_URL, {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable CORS for all routes
+app.use(cors());
+
 app.use("/public", express.static(path.join(__dirname, "client")));
 app.use(express.json());
 app.use("/user", userRoute);
 app.use("/project", projectRoute);
 app.use("/invite", inviteRoute);
-
 
 app.use(
   session({
@@ -50,29 +53,12 @@ app.get("/index", (req, res) => {
 app.get('/auth/google/',
   passport.authenticate('google', { scope: ['email', 'profile'] }));
 
-app.get('/auth/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  });
-
-
-app.get('/auth/facebook',
-  passport.authenticate('facebook'));
-
-app.get('/auth/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/client/home.html');
-  });
-
+// ... (rest of your authentication routes)
 
 app.get("/", (req, res) => {
   res.send("Hello wayFound");
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
