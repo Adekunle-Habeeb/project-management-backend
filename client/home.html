@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Task Creation with Attachment</title>
+</head>
+<body>
+  <h2>Create a Task with Attachment</h2>
+  <form action="/your-backend-endpoint-for-task-creation" method="post" enctype="multipart/form-data">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required><br><br>
+    
+    <label for="description">Description:</label>
+    <textarea id="description" name="description"></textarea><br><br>
+    
+    <label for="priority">Priority:</label>
+    <select id="priority" name="priority">
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select><br><br>
+
+    <label for="owner">Owner:</label>
+    <input type="text" id="owner" name="owner" required><br><br>
+
+    <label for="dependencies">Dependencies (comma-separated task IDs):</label>
+    <input type="text" id="dependencies" name="dependencies"><br><br>
+
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" name="startDate" required><br><br>
+
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" name="endDate" required><br><br>
+
+    <label for="labor">Labor Cost:</label>
+    <input type="number" id="labor" name="labor"><br><br>
+
+    <label for="materials">Materials Cost:</label>
+    <input type="number" id="materials" name="materials"><br><br>
+
+    <label for="otherExpenses">Other Expenses Cost:</label>
+    <input type="number" id="otherExpenses" name="otherExpenses"><br><br>
+
+    <label for="attachment">Attachment:</label>
+    <input type="file" id="attachment" name="attachment"><br><br>
+
+    <input type="submit" value="Create Task">
+  </form>
+</body>
+</html>
