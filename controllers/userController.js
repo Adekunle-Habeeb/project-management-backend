@@ -333,6 +333,25 @@ const editUserController = expressAsyncHandler(async (req, res) => {
 });
 
 
+// fetching all users
+const fetchAllUsersController = expressAsyncHandler(async (req, res) => {
+  const keyword = req.query.search
+    ? {
+        $or: [
+          { username: { $regex: req.query.search, $options: "i" } },
+          { name: { $regex: req.query.search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  const users = await User.find({
+    ...keyword,
+    _id: { $ne: req.user._id },
+  });
+  res.send(users);
+});
+
+
 const logoutController = (req, res) => {
   // Clear the authentication token (e.g., JWT token in a cookie)
   res.clearCookie('token');
@@ -352,5 +371,6 @@ module.exports = {
   forgotPasswordController, 
   resetPasswordController, 
   changepasswordController,
-  editUserController
+  editUserController,
+  fetchAllUsersController
 }
