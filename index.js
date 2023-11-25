@@ -7,7 +7,7 @@ const projectRoute = require("./routes/projectRoute");
 const inviteRoute = require("./routes/invitationRoute");
 const mongoose = require("mongoose");
 const path = require("path");
-const cors = require("cors"); // Import the cors middleware
+const cors = require("cors"); 
 require("./auth");
 
 mongoose.set("strictQuery", false);
@@ -25,8 +25,10 @@ mongoose.connect(process.env.MONGO_URL, {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable CORS for all routes
-app.use(cors());
+
+app.use(cors({
+  origin: "http://127.0.0.1:5173"
+}));
 
 app.use("/public", express.static(path.join(__dirname, "client")));
 app.use(express.json());
