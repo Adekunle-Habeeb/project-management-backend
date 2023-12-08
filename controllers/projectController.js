@@ -5,16 +5,14 @@ const { mailTransport, invoiceTemplate } = require("../utils/mail");
 const nodemailer = require('nodemailer');
 const Invoice = require("../models/invoice")
 const expressAsyncHandler = require("express-async-handler");
-const htmlToImage = require('html-to-image');
 const EventEmitter = require('events');
 const emitter = new EventEmitter();
-
 
 const createProjectController = expressAsyncHandler(async (req, res) => {
   try {
     const { title, description, startDate, endDate, team, type, employer } = req.body;
 
-    if (!title || !description || !startDate || !endDate ) {
+    if (!title || !description || !startDate || !endDate) {
       return res.status(400).json({ msg: "All fields are required" });
     }
 
@@ -31,6 +29,13 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
     const durationInMilliseconds = endDateObj - startDateObj;
     const durationInDays = durationInMilliseconds / (1000 * 60 * 60 * 24);
 
+    // Assuming your authentication middleware sets the user ID in req.user._id
+    const projectManager = req.user ? req.user._id : null;
+
+    if (!projectManager) {
+      return res.status(400).json({ msg: "User information not found" });
+    }
+
     const project = new Project({
       title,
       description,
@@ -38,7 +43,8 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
       endDate: endDateObj,
       duration: durationInDays,
       type,
-      team, 
+      projectManager: projectManager,
+      team,
       employer,
     });
 
@@ -46,7 +52,7 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
 
     res.status(201).json(project);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: 'Project creation failed' });
   }
 });
@@ -237,7 +243,6 @@ const retrieveProjectsAndTasksController = expressAsyncHandler(async (req, res) 
 });
 
 
-
 const calculateTotalEstimatedCostController = expressAsyncHandler(async (req, res) => {
   try {
     const { projectId } = req.params;
@@ -260,30 +265,6 @@ const calculateTotalEstimatedCostController = expressAsyncHandler(async (req, re
     return res.status(500).json({ error: 'Failed to calculate total estimated cost' });
   }
 });
-
-
-// const exportGanttChartController =  expressAsyncHandler(async (req, res) => {
-//   try {
-//     // Fetch the project and tasks data from your database based on the projectId
-//     const projectId = req.params.projectId;
-
-//     // Generate HTML content for the Gantt chart
-//     const ganttChartHtml = generateGanttChartHtml(projectId); // Implement this function to generate the chart HTML
-
-//     // Use html-to-image to convert the HTML to an image
-//     const image = await htmlToImage.toPng(ganttChartHtml);
-
-//     // Set the appropriate response headers for serving the image
-//     res.setHeader('Content-Type', 'image/png');
-//     res.setHeader('Content-Disposition', 'attachment; filename="gantt-chart.png"');
-
-//     // Serve the image as the response
-//     res.send(image);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Failed to export Gantt chart' });
-//   }
-// });
 
 
 const invoiceController = expressAsyncHandler(async (req, res) => {

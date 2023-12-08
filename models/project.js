@@ -4,7 +4,6 @@ const projectSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
-    unique: true,
   },
   description: {
     type: String,
@@ -28,11 +27,10 @@ const projectSchema = new mongoose.Schema({
   phoneNo:  {
     type: String,
   },
-  // projectManager: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "User",
-  //   required: true,
-  // },
+  projectManager: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   team: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
