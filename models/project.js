@@ -31,9 +31,12 @@ const projectSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+  // team: [{
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "User",
+  // }],
   team: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    type: String,
   }],
   employer: {
     type: String,

@@ -9,8 +9,11 @@ const EventEmitter = require('events');
 const emitter = new EventEmitter();
 
 const createProjectController = expressAsyncHandler(async (req, res) => {
+  const loggedUserEmail = req.user ? req.user.email : null;
+  const additionalTeamEmails = req.body.team || [];
+
   try {
-    const { title, description, startDate, endDate, team, type, employer } = req.body;
+    const { title, description, startDate, endDate, type, employer } = req.body;
 
     if (!title || !description || !startDate || !endDate) {
       return res.status(400).json({ msg: "All fields are required" });
@@ -29,11 +32,24 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
     const durationInMilliseconds = endDateObj - startDateObj;
     const durationInDays = durationInMilliseconds / (1000 * 60 * 60 * 24);
 
-    // Assuming your authentication middleware sets the user ID in req.user._id
     const projectManager = req.user ? req.user._id : null;
 
     if (!projectManager) {
       return res.status(400).json({ msg: "User information not found" });
+    }
+
+    const teamEmails = [loggedUserEmail, ...additionalTeamEmails];
+
+    // Validate that the additional team emails are not empty and are valid email addresses
+    if (additionalTeamEmails.some(email => !isValidEmail(email))) {
+      return res.status(400).json({ msg: "One or more additional team emails are invalid" });
+    }
+
+    // Check if additional team emails are registered
+    const isAdditionalEmailsRegistered = await User.exists({ email: { $in: additionalTeamEmails } });
+
+    if (!isAdditionalEmailsRegistered) {
+      return res.status(400).json({ msg: "One or more additional team emails are not registered" });
     }
 
     const project = new Project({
@@ -43,8 +59,8 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
       endDate: endDateObj,
       duration: durationInDays,
       type,
-      projectManager: projectManager,
-      team,
+      projectManager,
+      team: teamEmails,
       employer,
     });
 
@@ -56,6 +72,19 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
     res.status(500).json({ error: 'Project creation failed' });
   }
 });
+
+function isValidEmail(email) {
+  // Add your email validation logic here
+  // For a basic example, you can use a regular expression
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function isValidDate(dateString) {
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  return regex.test(dateString);
+}
+
 
 
 function isValidDate(dateString) {
