@@ -279,6 +279,25 @@ const resetPasswordController = expressAsyncHandler(async (req, res, next) => {
 });
 
 
+const fetchAllUsersController = expressAsyncHandler(async (req, res) => {
+  const keyword = req.query.search
+    ? {
+        $or: [
+          { username: { $regex: req.query.search, $options: "i" } },
+          { name: { $regex: req.query.search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  const users = await User.find({
+    ...keyword,
+    _id: { $ne: req.user._id },
+  });
+  res.send(users);
+});
+
+
+
 // Controller function to change user password
 const changepasswordController = async (req, res, next) => {
   try {
@@ -352,5 +371,6 @@ module.exports = {
   forgotPasswordController, 
   resetPasswordController, 
   changepasswordController,
-  editUserController
+  editUserController,
+  fetchAllUsersController
 }

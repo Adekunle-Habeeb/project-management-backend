@@ -14,6 +14,7 @@ mongoose.set("strictQuery", false);
 mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  poolSize: 10, // Adjust the pool size as needed
 })
   .then(() => {
     console.log("MongoDB is connected");

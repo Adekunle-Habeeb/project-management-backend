@@ -1,6 +1,6 @@
 const express  = require("express");
 const router = express.Router();
-const { registerController, loginController, logoutController, verifyUser, forgotPasswordController, resetPasswordController, changepasswordController, editUserController } = require("../controllers/userController")
+const { registerController, loginController, logoutController, verifyUser, forgotPasswordController, resetPasswordController, changepasswordController, editUserController, fetchAllUsersController } = require("../controllers/userController")
 const { protect } = require("../middleware/authMiddleware")
 
 
@@ -10,6 +10,7 @@ router.post("/verify", verifyUser);
 router.post("/forgotPassword", forgotPasswordController);
 router.post("/reset", resetPasswordController);
 router.post("/logout", protect , logoutController);
+router.get("/fetchUsers", protect, fetchAllUsersController);
 router.patch("/change-password", protect, changepasswordController);
 router.patch("/edit", protect, editUserController);
 
