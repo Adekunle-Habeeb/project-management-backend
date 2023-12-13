@@ -122,7 +122,7 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       title,
       description,
       priority,
-      owner,
+      assignee, // Assuming assignee is the email of the user
       startDate,
       endDate,
       projectId,
@@ -132,8 +132,30 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       otherExpenses,
     } = req.body;
 
-    if (!title || !priority || !owner || !startDate || !endDate) {
+    // Check for missing required fields
+    if (!title || !priority || !startDate || !endDate) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Find the project with the provided projectId
+    const project = await Project.findById(projectId);
+
+    // Check if the project exists
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Check if the assignee's email is in the team members' array for the project
+    if (!project.team.includes(assignee)) {
+      return res.status(400).json({ error: 'Assignee is not part of the project team' });
+    }
+
+    // Find the user with the provided email
+    const foundUser = await User.findOne({ email: assignee });
+
+    // Check if the user exists
+    if (!foundUser) {
+      return res.status(404).json({ error: 'Assignee not found' });
     }
 
     // Calculate the duration based on startDate and endDate
@@ -144,11 +166,12 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
     // Handle attachments (assuming you're using a library like multer for file uploads)
     const attachments = req.files; // Assuming attachments are part of the request files
 
+    // Create a new task instance
     const task = new Task({
       title,
       description,
       priority,
-      owner,
+      assignee: foundUser._id, // Assign the ObjectId of the user
       startDate,
       endDate,
       projectId,
@@ -162,16 +185,19 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       attachments, // Store attachment files
     });
 
+    // Save the task to the database
     await task.save();
 
     // You can perform additional calculations or logic here, such as calculating earliest and latest times.
 
+    // Respond with the created task
     res.status(201).json(task);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: 'Task creation and time calculation failed' });
   }
 });
+
 
 const deleteTaskController = expressAsyncHandler(async (req, res) => {
   try {
