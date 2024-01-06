@@ -296,6 +296,54 @@ const fetchAllUsersController = expressAsyncHandler(async (req, res) => {
   res.send(users);
 });
 
+const editUserProfile = expressAsyncHandler(async (req, res) => {
+  // Assuming you have a middleware that extracts the user from the request
+  const userId = req.user._id;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    switch (req.method) {
+      case 'GET':
+        // Return user details in response for GET request
+        return res.status(200).json({ user });
+
+      case 'PUT':
+        // Update user fields based on the request body
+        if (req.body.firstName) user.firstName = req.body.firstName;
+        if (req.body.lastName) user.lastName = req.body.lastName;
+        if (req.body.designation) user.designation = req.body.designation;
+        if (req.body.nationality) user.nationality = req.body.nationality;
+        // Add more fields as needed
+
+        // Validate if any field is provided for update
+        if (
+          !req.body.firstName &&
+          !req.body.lastName &&
+          !req.body.designation &&
+          !req.body.nationality
+          // Add more fields as needed
+        ) {
+          return res.status(400).json({ message: 'No valid fields provided for update' });
+        }
+
+        // Save the updated user
+        await user.save();
+
+        return res.status(200).json({ message: 'Profile updated successfully', user });
+
+      default:
+        return res.status(405).json({ message: 'Method Not Allowed' });
+    }
+  } catch (error) {
+    console.error(error); // Log the error for debugging purposes
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
 
 // Controller function to change user password
@@ -352,6 +400,34 @@ const editUserController = expressAsyncHandler(async (req, res) => {
 });
 
 
+const getUserController = expressAsyncHandler(async (req, res) => {
+  try {
+    const userId = req.params.id; // Assuming the user ID is passed as a route parameter
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (user) {
+      res.json({
+        _id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        nationality: user.nationality,
+        designation: user.designation,
+        avatar: user.avatar
+      });
+    } else {
+      res.status(404).json({ msg: "User not found" });
+    }
+  } catch (error) {
+    console.error("User details retrieval error:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+
+
 const logoutController = (req, res) => {
   // Clear the authentication token (e.g., JWT token in a cookie)
   res.clearCookie('token');
@@ -372,5 +448,7 @@ module.exports = {
   resetPasswordController, 
   changepasswordController,
   editUserController,
-  fetchAllUsersController
+  fetchAllUsersController,
+  editUserProfile,
+  getUserController
 }

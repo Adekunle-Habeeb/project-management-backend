@@ -8,6 +8,8 @@ const inviteRoute = require("./routes/invitationRoute");
 const mongoose = require("mongoose");
 const path = require("path");
 const cors = require("cors"); 
+const httpProxy = require("http-proxy")
+
 require("./auth");
 
 mongoose.set("strictQuery", false);
@@ -25,7 +27,7 @@ mongoose.connect(process.env.MONGO_URL, {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+const proxy = httpProxy.createProxyServer();
 
 app.use(cors({
   origin: "http://127.0.0.1:5173"
