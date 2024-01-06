@@ -122,7 +122,7 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       title,
       description,
       priority,
-      assignee, // Assuming assignee is the email of the user
+      assignee,
       startDate,
       endDate,
       projectId,
@@ -166,12 +166,15 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
     // Handle attachments (assuming you're using a library like multer for file uploads)
     const attachments = req.files; // Assuming attachments are part of the request files
 
+    // Use projectManager as the owner of the task
+    const owner = project.projectManager;
+
     // Create a new task instance
     const task = new Task({
       title,
       description,
       priority,
-      assignee: foundUser._id, // Assign the ObjectId of the user
+      assignee: foundUser._id,
       startDate,
       endDate,
       projectId,
@@ -182,7 +185,8 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
         otherExpenses,
       },
       duration,
-      attachments, // Store attachment files
+      attachments,
+      owner, // Set the projectManager as the owner of the task
     });
 
     // Save the task to the database
@@ -197,7 +201,6 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
     res.status(500).json({ error: 'Task creation and time calculation failed' });
   }
 });
-
 
 const deleteTaskController = expressAsyncHandler(async (req, res) => {
   try {

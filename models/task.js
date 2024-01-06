@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+
 const taskSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -52,10 +53,15 @@ const taskSchema = new mongoose.Schema({
   attachments: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Attachment',
-  },
+  }],
   // You can add more fields for attachments such as file names, descriptions, etc. as needed
-  ],
+  owner: {  // Added 'owner' field for the user who owns the task
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
 }, { timestamps: true });
+
+
 
 const Task = mongoose.model('Task', taskSchema);
 
