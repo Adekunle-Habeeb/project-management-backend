@@ -13,7 +13,7 @@ router.post("/logout", protect , logoutController);
 router.get("/fetchUsers", protect, fetchAllUsersController);
 router.patch("/change-password", protect, changepasswordController);
 router.patch("/edit", protect, editUserController);
-router.get("/get-user", protect, getUserController);
+router.get("/get-user/:id", protect, getUserController);
 getUserController
 
 
