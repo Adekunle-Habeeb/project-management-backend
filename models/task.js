@@ -55,9 +55,9 @@ const taskSchema = new mongoose.Schema({
     ref: 'Attachment',
   }],
   // You can add more fields for attachments such as file names, descriptions, etc. as needed
-  owner: {  // Added 'owner' field for the user who owns the task
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+  owner: {
+    type: String,
+    required: true,
   },
 }, { timestamps: true });
 

@@ -32,7 +32,7 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
     const durationInMilliseconds = endDateObj - startDateObj;
     const durationInDays = durationInMilliseconds / (1000 * 60 * 60 * 24);
 
-    const projectManager = req.user ? req.user._id : null;
+    const projectManager = req.user ? req.user.email : null;
 
     if (!projectManager) {
       return res.status(400).json({ msg: "User information not found" });
@@ -73,12 +73,6 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
   }
 });
 
-function isValidEmail(email) {
-  // Add your email validation logic here
-  // For a basic example, you can use a regular expression
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
 
 function isValidDate(dateString) {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
