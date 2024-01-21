@@ -22,7 +22,6 @@ const taskSchema = new mongoose.Schema({
   projectId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Project',
-    required: true,
   },
   startDate: {
     type: Date,
@@ -56,8 +55,8 @@ const taskSchema = new mongoose.Schema({
   }],
   // You can add more fields for attachments such as file names, descriptions, etc. as needed
   owner: {
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
 }, { timestamps: true });
 

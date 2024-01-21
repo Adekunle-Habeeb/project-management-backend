@@ -8,9 +8,11 @@ const expressAsyncHandler = require("express-async-handler");
 const EventEmitter = require('events');
 const emitter = new EventEmitter();
 
+
 const createProjectController = expressAsyncHandler(async (req, res) => {
   const loggedUserEmail = req.user ? req.user.email : null;
   const additionalTeamEmails = req.body.team || [];
+
 
   try {
     const { title, description, startDate, endDate, type, employer } = req.body;
@@ -32,13 +34,14 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
     const durationInMilliseconds = endDateObj - startDateObj;
     const durationInDays = durationInMilliseconds / (1000 * 60 * 60 * 24);
 
-    const projectManager = req.user ? req.user.email : null;
+    const projectManager = req.user ? req.user._id : null;
+    const projectManagerEmail = req.user ? req.user.email : null;
 
     if (!projectManager) {
       return res.status(400).json({ msg: "User information not found" });
     }
 
-    const teamEmails = [loggedUserEmail, ...additionalTeamEmails];
+    const teamEmails = [projectManagerEmail, ...additionalTeamEmails];
 
     // Validate that the additional team emails are not empty and are valid email addresses
     if (additionalTeamEmails.some(email => !isValidEmail(email))) {
@@ -62,16 +65,25 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
       projectManager,
       team: teamEmails,
       employer,
+      client,
     });
 
     await project.save();
 
-    res.status(201).json(project);
+    // Include the project manager's email in the response
+    res.status(201).json({ project, projectManagerEmail });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Project creation failed' });
   }
 });
+
+function isValidEmail(email) {
+  // Add your email validation logic here
+  // For a basic example, you can use a regular expression
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
 
 
 function isValidDate(dateString) {
@@ -196,6 +208,7 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
   }
 });
 
+
 const deleteTaskController = expressAsyncHandler(async (req, res) => {
   try {
     // Get the task ID from the request parameters
@@ -319,11 +332,116 @@ const calculateTotalEstimatedCostController = expressAsyncHandler(async (req, re
 });
 
 
+// const invoiceController = expressAsyncHandler(async (req, res) => {
+//   try {
+//     // Extract the projectId from the request body
+//     const { projectId } = req.body;
+//     const userId = req.user.id;
+
+//     if (!projectId) {
+//       return res.status(400).json({ error: 'projectId is required in the request body' });
+//     }
+
+//     // Find the project by its _id
+//     const project = await Project.findOne({ _id: projectId });
+
+//     if (!project) {
+//       return res.status(404).json({ error: 'Project not found' });
+//     }
+
+//     // Find completed tasks for the project
+//     const tasks = await Task.find({
+//       projectId: project._id,
+//       status: 'Done',
+//     });
+
+//     if (tasks.length === 0) {
+//       return res.status(404).json({ error: 'No completed tasks found for the project' });
+//     }
+
+//     // Calculate the total estimated cost for the project
+//     const totalEstimatedCost = tasks.reduce((total, task) => {
+//       const { labor, materials, otherExpenses } = task.estimatedCosts;
+//       return total + labor + materials + otherExpenses;
+//     }, 0);
+
+//     // Create an invoice for the project and include the totalEstimatedCost
+//     const invoice = new Invoice({
+//       projectId: project._id,
+//       totalEstimatedCost,
+//       tasks: tasks.map((task) => ({
+//         taskId: task._id,
+//         taskDetails: task.description || 'No description available',
+//         costs: {
+//           labor: task.estimatedCosts.labor || 0,
+//           materials: task.estimatedCosts.materials || 0,
+//           otherExpenses: task.estimatedCosts.otherExpenses || 0,
+//         },
+//       })),
+//     });
+
+//     // Save the invoice
+//     await invoice.save();
+
+//     // Update the project with the totalEstimatedCost
+//     project.totalEstimatedCost = totalEstimatedCost;
+
+//     // Save the updated project with the totalEstimatedCost
+//     await project.save();
+
+//     // Emit an event when tasks are marked as "Done"
+//     if (tasks.length > 0) {
+//       emitter.emit('tasksDone', project, tasks, userId);
+//     }
+
+//     res.status(200).json({ message: 'Invoice generated successfully', totalEstimatedCost });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Invoice generation failed' });
+//   }
+// });
+
+
+// // Listen for the 'tasksDone' event and send the email
+// emitter.on('tasksDone', async (project, tasks, userId) => {
+//   try {
+//     const user = await User.findById(userId); // Assuming you have a User model and 'userId' is defined
+
+//     // Check if the user exists
+//     if (!user) {
+//       console.error('User not found');
+//       // Handle the error or send an error response here
+//       return;
+//     }
+
+//     // Create the email content using the invoiceTemplate function
+//     const emailContent = invoiceTemplate(project, tasks);
+
+//     const transporter = mailTransport();
+//     const emailOptions = {
+//       from: 'Way found support<support@wayfound.com>',
+//       to: user.email, // Make sure 'user.email' is defined
+//       subject: 'Invoice Generated Successfully',
+//       html: emailContent, // Use the dynamically generated email content
+//     };
+
+//     // Send the email
+//     transporter.sendMail(emailOptions, (error, info) => {
+//       if (error) {
+//         console.error('Email sending failed:', error);
+//       } else {
+//         console.log('Email sent:', info.response);
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Error in sending email:', error);
+//   }
+// });
+
 const invoiceController = expressAsyncHandler(async (req, res) => {
   try {
     // Extract the projectId from the request body
     const { projectId } = req.body;
-    const userId = req.user.id;
 
     if (!projectId) {
       return res.status(400).json({ error: 'projectId is required in the request body' });
@@ -336,96 +454,27 @@ const invoiceController = expressAsyncHandler(async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Find completed tasks for the project
+    // Find all tasks for the project
     const tasks = await Task.find({
       projectId: project._id,
-      status: 'Done',
     });
 
     if (tasks.length === 0) {
-      return res.status(404).json({ error: 'No completed tasks found for the project' });
+      return res.status(404).json({ error: 'No tasks found for the project' });
     }
 
-    // Calculate the total estimated cost for the project
+    // Calculate the total estimated cost for the project based on all tasks
     const totalEstimatedCost = tasks.reduce((total, task) => {
-      const { labor, materials, otherExpenses } = task.estimatedCosts;
-      return total + labor + materials + otherExpenses;
+      const taskCost = task.estimatedCosts.labor + task.estimatedCosts.materials + task.estimatedCosts.otherExpenses;
+      return total + taskCost;
     }, 0);
 
-    // Create an invoice for the project and include the totalEstimatedCost
-    const invoice = new Invoice({
-      projectId: project._id,
-      totalEstimatedCost, // Include the totalEstimatedCost in the invoice
-      tasks: [], // Initialize the tasks as an empty array
-      // You can add other invoice-related fields here
-    });
+    // Respond with the invoice details (with all tasks, their estimated costs, and totalEstimatedCost)
+    res.status(200).json({ message: 'Invoice details retrieved successfully', project, tasks, totalEstimatedCost });
 
-    // Add task details to the invoice
-    invoice.tasks = tasks.map((task) => ({
-      taskId: task._id,
-      taskDetails: task.description || 'No description available',
-      costs: {
-        labor: task.estimatedCosts.labor || 0,
-        materials: task.estimatedCosts.materials || 0,
-        otherExpenses: task.estimatedCosts.otherExpenses || 0,
-      },
-    }));
-
-    // Save the invoice
-    await invoice.save();
-
-    // Update the project with the totalEstimatedCost
-    project.totalEstimatedCost = totalEstimatedCost;
-
-    // Save the updated project with the totalEstimatedCost
-    await project.save();
-
-    // Emit an event when tasks are marked as "Done"
-    if (tasks.length > 0) {
-      emitter.emit('tasksDone', project, tasks, userId);
-    }
-
-    res.status(200).json({ message: 'Invoice generated successfully', totalEstimatedCost });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Invoice generation failed' });
-  }
-});
-
-
-// Listen for the 'tasksDone' event and send the email
-emitter.on('tasksDone', async (project, tasks, userId) => {
-  try {
-    const user = await User.findById(userId); // Assuming you have a User model and 'userId' is defined
-
-    // Check if the user exists
-    if (!user) {
-      console.error('User not found');
-      // Handle the error or send an error response here
-      return;
-    }
-
-    // Create the email content using the invoiceTemplate function
-    const emailContent = invoiceTemplate(project, tasks);
-
-    const transporter = mailTransport();
-    const emailOptions = {
-      from: 'Way found support<support@wayfound.com>',
-      to: user.email, // Make sure 'user.email' is defined
-      subject: 'Invoice Generated Successfully',
-      html: emailContent, // Use the dynamically generated email content
-    };
-
-    // Send the email
-    transporter.sendMail(emailOptions, (error, info) => {
-      if (error) {
-        console.error('Email sending failed:', error);
-      } else {
-        console.log('Email sent:', info.response);
-      }
-    });
-  } catch (error) {
-    console.error('Error in sending email:', error);
+    res.status(500).json({ error: 'Error retrieving invoice details' });
   }
 });
 

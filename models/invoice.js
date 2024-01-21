@@ -24,8 +24,7 @@ const invoiceSchema = new mongoose.Schema({
       },
     },
   ],
-  totalEstimatedCost: Number, // Add the totalEstimatedCost field here
-  // Add other invoice-related fields here
+  totalEstimatedCost: Number,
 }, { timestamps: true });
 
 const Invoice = mongoose.model('Invoice', invoiceSchema);

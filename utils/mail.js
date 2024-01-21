@@ -119,8 +119,8 @@ function plainEmailTemplate() {
 
 function invoiceTemplate(project, tasks) {
   // Extract relevant information from the project and tasks
-  const projectName = project.name; // Use the correct property name
-  const totalEstimatedCost = project.totalEstimatedCost; // Adjust this based on your schema
+  const projectName = project.name || 'N/A';
+  const totalEstimatedCost = project.totalEstimatedCost || 0;
 
   // Define your plain email template as a string
   const template = `
@@ -158,13 +158,13 @@ function invoiceTemplate(project, tasks) {
             <ul>
                 ${tasks.map((task) => `
                     <li>
-                        Task Name: ${task.name}
+                        Task Name: ${task.taskDetails}
                         <p>Task Description: ${task.description || 'No description available'}</p>
                         <p>Costs:</p>
                         <ul>
-                            <li>Labor: $${task.estimatedCosts.labor || 0}</li>
-                            <li>Materials: $${task.estimatedCosts.materials || 0}</li>
-                            <li>Other Expenses: $${task.estimatedCosts.otherExpenses || 0}</li>
+                            <li>Labor: $${task.costs.labor || 0}</li>
+                            <li>Materials: $${task.costs.materials || 0}</li>
+                            <li>Other Expenses: $${task.costs.otherExpenses || 0}</li>
                         </ul>
                     </li>
                 `).join('')}
@@ -176,7 +176,6 @@ function invoiceTemplate(project, tasks) {
 
   return template;
 }
-
 
 
 const sendEmail = async(option) => {
