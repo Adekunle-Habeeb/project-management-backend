@@ -37,7 +37,9 @@ const projectSchema = new mongoose.Schema({
   employer: {
     type: String,
   },
-
+  projectManagerEmail: {
+    type: String,
+  },
 }, { timestamps: true });
 
 const Project = mongoose.model("Project", projectSchema);

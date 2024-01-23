@@ -65,7 +65,8 @@ const createProjectController = expressAsyncHandler(async (req, res) => {
       projectManager,
       team: teamEmails,
       employer,
-      client,
+      projectManagerEmail,
+
     });
 
     await project.save();
