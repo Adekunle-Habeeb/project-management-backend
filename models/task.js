@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const taskSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -16,8 +15,7 @@ const taskSchema = new mongoose.Schema({
     required: true,
   },
   assignee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String, // Add enum values if needed
   },
   projectId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -50,16 +48,14 @@ const taskSchema = new mongoose.Schema({
   latestFinish: Date,
   duration: Number,
   attachments: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Attachment',
+    fileName: String,
+    description: String,
+    filePath: String, // Path to the file in the database or filesystem
   }],
-  // You can add more fields for attachments such as file names, descriptions, etc. as needed
   owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
   },
 }, { timestamps: true });
-
 
 
 const Task = mongoose.model('Task', taskSchema);

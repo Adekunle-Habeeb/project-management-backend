@@ -123,6 +123,127 @@ const deleteProjectController = expressAsyncHandler(async (req, res) => {
 });
 
 
+
+// const multer = require('multer');
+
+// // Define storage for the attachments
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, 'uploads/'); // Directory where files will be uploaded
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, Date.now() + '-' + file.originalname); // Unique filename
+//   }
+// });
+
+// // Define file filter to allow images (JPEG, PNG) and PDF files
+// const fileFilter = function (req, file, cb) {
+//   if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+//     cb(null, true);
+//   } else {
+//     cb(new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.'), false);
+//   }
+// };
+
+// // // Initialize multer upload with storage and file filter
+// const upload = multer({ storage: storage, fileFilter: fileFilter });
+
+// const createTaskController = expressAsyncHandler(async (req, res) => {
+//   try {
+//     const {
+//       title,
+//       description,
+//       priority,
+//       assignee,
+//       startDate,
+//       endDate,
+//       projectId,
+//       type,
+//       labor,
+//       materials,
+//       otherExpenses,
+//       owner,
+//     } = req.body;
+
+//     // Check for missing required fields
+//     if (!title || !priority || !startDate || !endDate || !assignee || !owner) {
+//       return res.status(400).json({ error: 'Missing required fields' });
+//     }
+
+//     // Find the project with the provided projectId
+//     const project = await Project.findById(projectId);
+
+//     // Check if the project exists
+//     if (!project) {
+//       return res.status(404).json({ error: 'Project not found' });
+//     }
+
+//     // Check if the assignee's email is in the team members' array for the project
+//     if (!project.team.includes(assignee)) {
+//       return res.status(400).json({ error: 'Assignee is not part of the project team' });
+//     }
+
+//     // Find the user with the provided email
+//     const foundUser = await User.findOne({ email: assignee });
+
+//     // Check if the user exists and is a member of the project team
+//     if (!foundUser || !project.team.includes(foundUser.email)) {
+//       return res.status(400).json({ error: 'Invalid assignee or not part of the project team' });
+//     }
+
+//     // Calculate the duration based on startDate and endDate
+//     const startDateTime = new Date(startDate).getTime();
+//     const endDateTime = new Date(endDate).getTime();
+//     const duration = Math.ceil((endDateTime - startDateTime) / (1000 * 3600 * 24));
+
+//     // Handle file uploads with multer middleware
+//     upload.array('attachments')(req, res, async function (err) {
+//       if (err instanceof multer.MulterError) {
+//         // A Multer error occurred when uploading.
+//         return res.status(500).json({ error: 'File upload failed' });
+//       } else if (err) {
+//         // An unknown error occurred when uploading.
+//         return res.status(500).json({ error: 'File upload failed' });
+//       }
+
+//       // Files uploaded successfully
+//       const attachments = req.files.map(file => file.path);
+
+//       // Create a new task instance
+//       const task = new Task({
+//         title,
+//         description,
+//         priority,
+//         assignee,
+//         startDate,
+//         endDate,
+//         projectId,
+//         type,
+//         estimatedCosts: {
+//           labor,
+//           materials,
+//           otherExpenses,
+//         },
+//         duration,
+//         attachments,
+//         owner,
+//       });
+
+//       // Save the task to the database
+//       await task.save();
+
+//       // Respond with the created task including the owner
+//       res.status(201).json(task);
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Task creation and time calculation failed' });
+//   }
+// });
+
+
+
+
 const createTaskController = expressAsyncHandler(async (req, res) => {
   try {
     const {
@@ -137,10 +258,11 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       labor,
       materials,
       otherExpenses,
+      owner,
     } = req.body;
 
     // Check for missing required fields
-    if (!title || !priority || !startDate || !endDate) {
+    if (!title || !priority || !startDate || !endDate || !assignee || !owner) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -160,9 +282,9 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
     // Find the user with the provided email
     const foundUser = await User.findOne({ email: assignee });
 
-    // Check if the user exists
-    if (!foundUser) {
-      return res.status(404).json({ error: 'Assignee not found' });
+    // Check if the user exists and is a member of the project team
+    if (!foundUser || !project.team.includes(foundUser.email)) {
+      return res.status(400).json({ error: 'Invalid assignee or not part of the project team' });
     }
 
     // Calculate the duration based on startDate and endDate
@@ -173,15 +295,12 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
     // Handle attachments (assuming you're using a library like multer for file uploads)
     const attachments = req.files; // Assuming attachments are part of the request files
 
-    // Use projectManager as the owner of the task
-    const owner = project.projectManager;
-
     // Create a new task instance
     const task = new Task({
       title,
       description,
       priority,
-      assignee: foundUser._id,
+      assignee,
       startDate,
       endDate,
       projectId,
@@ -193,21 +312,24 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       },
       duration,
       attachments,
-      owner, // Set the projectManager as the owner of the task
+      owner,
     });
 
     // Save the task to the database
     await task.save();
 
-    // You can perform additional calculations or logic here, such as calculating earliest and latest times.
-
-    // Respond with the created task
+    // Respond with the created task including the owner
     res.status(201).json(task);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Task creation and time calculation failed' });
   }
 });
+
+
+
+
+
 
 
 const deleteTaskController = expressAsyncHandler(async (req, res) => {
