@@ -243,7 +243,6 @@ const deleteProjectController = expressAsyncHandler(async (req, res) => {
 
 
 
-
 const createTaskController = expressAsyncHandler(async (req, res) => {
   try {
     const {
@@ -258,11 +257,13 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       labor,
       materials,
       otherExpenses,
-      owner,
     } = req.body;
 
+    // Get the authenticated user's email
+    const ownerEmail = req.user.email;
+
     // Check for missing required fields
-    if (!title || !priority || !startDate || !endDate || !assignee || !owner) {
+    if (!title || !priority || !startDate || !endDate || !assignee || !ownerEmail) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -312,21 +313,19 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       },
       duration,
       attachments,
-      owner,
+      owner: ownerEmail, // Assigning the owner's email
     });
 
     // Save the task to the database
     await task.save();
 
-    // Respond with the created task including the owner
+    // Respond with the created task including the owner's email
     res.status(201).json(task);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Task creation and time calculation failed' });
   }
 });
-
-
 
 
 
