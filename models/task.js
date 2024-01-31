@@ -52,10 +52,14 @@ const taskSchema = new mongoose.Schema({
     description: String,
     filePath: String, // Path to the file in the database or filesystem
   }],
-  owner: {
-    type: String,
+  ownerEmail: {
+    type: String
   },
-}, { timestamps: true });
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+});
 
 
 const Task = mongoose.model('Task', taskSchema);
