@@ -14,9 +14,9 @@ const taskSchema = new mongoose.Schema({
     default: "low",
     required: true,
   },
-  assignee: {
+  assignees: [{ // Change assignee to assignees, an array
     type: String, // Add enum values if needed
-  },
+  }],
   projectId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Project',

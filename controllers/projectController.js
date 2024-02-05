@@ -123,14 +123,13 @@ const deleteProjectController = expressAsyncHandler(async (req, res) => {
 });
 
 
-
 const createTaskController = expressAsyncHandler(async (req, res) => {
   try {
     const {
       title,
       description,
       priority,
-      assignee,
+      assignees, // Change to accept an array of assignees
       startDate,
       endDate,
       projectId,
@@ -145,7 +144,7 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
     const owner = req.user._id; // Assuming you have middleware to set req.user
 
     // Check for missing required fields
-    if (!title || !priority || !startDate || !endDate || !assignee ) {
+    if (!title || !priority || !startDate || !endDate ) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -157,18 +156,18 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Check if the assignee's email is in the team members' array for the project
-    if (!project.team.includes(assignee)) {
-      return res.status(400).json({ error: 'Assignee is not part of the project team' });
+    // Check if all assignees are part of the project team
+    // if (!Array.isArray(assignees)) {
+    //   return res.status(400).json({ error: 'Assignees must be an array' });
+    // }
+    
+    // Check if all assignees are part of the project team
+    for (const assignee of assignees) {
+      if (!project.team.includes(assignee)) {
+        return res.status(400).json({ error: `Assignee ${assignee} is not part of the project team` });
+      }
     }
-
-    // Find the user with the provided email
-    const foundUser = await User.findOne({ email: assignee });
-
-    // Check if the user exists and is a member of the project team
-    if (!foundUser || !project.team.includes(foundUser.email)) {
-      return res.status(400).json({ error: 'Invalid assignee or not part of the project team' });
-    }
+    
 
     // Calculate the duration based on startDate and endDate
     const startDateTime = new Date(startDate).getTime();
@@ -183,7 +182,7 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       title,
       description,
       priority,
-      assignee,
+      assignees, // Assigning multiple assignees
       startDate,
       endDate,
       projectId,
@@ -211,6 +210,25 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
 });
 
 
+const getTeamMembers = expressAsyncHandler(async (req, res) => {
+  try {
+    const projectId = req.params.projectId;
+
+    // Find the project by ID
+    const project = await Project.findById(projectId);
+
+    // Check if the project exists
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Return the team members of the project
+    res.status(200).json({ teamMembers: project.team });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 
@@ -573,5 +591,6 @@ module.exports = {
   //exportGanttChartController,
   invoiceController,
   calculateCriticalPathController,
-  retrieveProjectsAndTasksController
+  retrieveProjectsAndTasksController,
+  getTeamMembers
  };
