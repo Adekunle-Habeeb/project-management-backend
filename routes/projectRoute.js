@@ -13,8 +13,8 @@ router.get("/:projectId/total-cost", protect , calculateTotalEstimatedCostContro
 // router.get("/export-gantt-chart/:projectId", protect, exportGanttChartController); 
 router.post("/invoices", protect, invoiceController);
 router.get("/:project/criticalPath", protect, calculateCriticalPathController);
-router.get("/:userId/projects-and-tasks", retrieveProjectsAndTasksController);
-router.get("/:projectId/team", getTeamMembers);
+router.get("/:userId/projects-and-tasks", protect, retrieveProjectsAndTasksController);
+router.get("/:projectId/team", protect ,getTeamMembers);
 
 
 module.exports = router;
