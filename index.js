@@ -30,7 +30,7 @@ const PORT = process.env.PORT || 3000;
 const proxy = httpProxy.createProxyServer();
 
 app.use(cors({
-  origin: "*"
+  origin: "https://seyi-project.netlify.app/",
 }));
 
 app.use("/public", express.static(path.join(__dirname, "client")));

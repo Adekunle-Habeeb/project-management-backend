@@ -346,11 +346,12 @@ const calculateTotalEstimatedCostController = expressAsyncHandler(async (req, re
 
     // Update the project with the total estimated cost
     const project = await Project.findById(projectId);
-    project.totalEstimatedCost = totalEstimatedCost;
+    project.totalEstimatedCost = totalEstimatedCost; // Update totalEstimatedCost field
     await project.save();
 
     return res.status(200).json({ totalEstimatedCost });
   } catch (error) {
+    console.log(error)
     return res.status(500).json({ error: 'Failed to calculate total estimated cost' });
   }
 });

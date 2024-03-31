@@ -54,7 +54,7 @@ const registerController = expressAsyncHandler(async (req, res) => {
 
     transporter.sendMail(emailOptions, (error, info) => {
       if (error) {
-        console.error("Email sending failed:", error);
+        console.log(error);
         // Handle email sending error
         return res.status(500).json({ msg: "Email sending failed" });
       } else {

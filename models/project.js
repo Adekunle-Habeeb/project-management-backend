@@ -21,8 +21,8 @@ const projectSchema = new mongoose.Schema({
     type: String,
   },
   duration: {
-    type: Number, // Add the duration field as a Number type
-    required: true, // You can set it as required if needed
+    type: Number,
+    required: true,
   },
   phoneNo:  {
     type: String,
@@ -39,6 +39,10 @@ const projectSchema = new mongoose.Schema({
   },
   projectManagerEmail: {
     type: String,
+  },
+  totalEstimatedCost: {
+    type: Number,
+    default: 0, // Set a default value of 0 for totalEstimatedCost
   },
 }, { timestamps: true });
 
