@@ -1,12 +1,10 @@
 const Project = require("../models/project");
 const Task = require("../models/task");
 const User = require("../models/userModel");
-const { mailTransport, invoiceTemplate } = require("../utils/mail");
-const nodemailer = require('nodemailer');
-const Invoice = require("../models/invoice")
 const expressAsyncHandler = require("express-async-handler");
-const EventEmitter = require('events');
-const emitter = new EventEmitter();
+const Attachment = require("../models/attachment");
+
+
 
 
 const createProjectController = expressAsyncHandler(async (req, res) => {
@@ -139,12 +137,12 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       otherExpenses,
     } = req.body;
 
-    // Get the authenticated user's ID
+    // Get the authenticated user's ID and email
+    const ownerId = req.user._id; // Assuming you have middleware to set req.user
     const ownerEmail = req.user.email;
-    const owner = req.user._id; // Assuming you have middleware to set req.user
 
     // Check for missing required fields
-    if (!title || !priority || !startDate || !endDate ) {
+    if (!title || !priority || !startDate || !endDate) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -157,17 +155,11 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
     }
 
     // Check if all assignees are part of the project team
-    // if (!Array.isArray(assignees)) {
-    //   return res.status(400).json({ error: 'Assignees must be an array' });
-    // }
-    
-    // Check if all assignees are part of the project team
     for (const assignee of assignees) {
       if (!project.team.includes(assignee)) {
         return res.status(400).json({ error: `Assignee ${assignee} is not part of the project team` });
       }
     }
-    
 
     // Calculate the duration based on startDate and endDate
     const startDateTime = new Date(startDate).getTime();
@@ -175,7 +167,15 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
     const duration = Math.ceil((endDateTime - startDateTime) / (1000 * 3600 * 24));
 
     // Handle attachments (assuming you're using a library like multer for file uploads)
-    const attachments = req.files; // Assuming attachments are part of the request files
+    const attachments = req.file?.map(file => ({
+      filename: file.originalname,
+      uploader: ownerId,
+      projectId,
+      taskId: null, // Task ID will be updated after task creation
+    })) || [];
+  
+  // Now `files` will be an empty array if `req.files` is undefined/null
+  
 
     // Create a new task instance with the owner set to the authenticated user's ID
     const task = new Task({
@@ -194,12 +194,18 @@ const createTaskController = expressAsyncHandler(async (req, res) => {
       },
       duration,
       attachments,
-      owner, // Assigning the owner's ID
-      ownerEmail
+      owner: ownerId, // Assigning the owner's ID
+      ownerEmail,
     });
 
     // Save the task to the database
     await task.save();
+
+    // Update task ID in attachments and save them to the database
+    await Attachment.insertMany(attachments.map(attachment => ({
+      ...attachment,
+      taskId: task._id, // Update taskId with the newly created task's ID
+    })));
 
     // Respond with the created task including the owner's ID
     res.status(201).json(task);
@@ -581,6 +587,14 @@ const calculateCriticalPathController = expressAsyncHandler(async (req, res) => 
 });
 
 
+
+const attachmentController = expressAsyncHandler(async (req, res) => {
+  res.json(req.file);
+})
+
+
+
+
 module.exports = { 
   createProjectController,
   deleteProjectController,
@@ -593,5 +607,6 @@ module.exports = {
   invoiceController,
   calculateCriticalPathController,
   retrieveProjectsAndTasksController,
-  getTeamMembers
+  getTeamMembers,
+  attachmentController
  };
